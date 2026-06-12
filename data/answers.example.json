@@ -1,0 +1,15 @@
+{
+  "resumeFile": "${HOME}/jobs-pipeline/cv/cv.pdf",
+  "linkedinSlug": "your-linkedin-handle",
+  "githubUsername": "YOUR_USERNAME",
+  "portfolioUrl": "https://yourportfolio.com",
+  "phone": "+1 555 0100",
+  "location": "City, Country",
+  "salaryMonthlyUsd": 7500,
+  "salaryHourlyUsd": 80,
+  "seniority": "Senior",
+  "englishLevel": "Advanced",
+  "remoteOnly": true,
+  "timezone": "GMT-3",
+  "startDate": "immediate"
+}

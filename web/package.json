@@ -1,0 +1,17 @@
+{
+  "name": "jobs-pipeline-dashboard",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^5.0.3",
+    "svelte": "^5.16.0",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.7"
+  }
+}

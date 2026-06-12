@@ -1,0 +1,20 @@
+[
+  {
+    "company": "Example Startup",
+    "stage": "Seed — $2M Jan 2026",
+    "email": "founder@example-startup.com",
+    "founder": "Jane Doe (Co-Founder & CEO)",
+    "role": "Senior Backend Engineer — node/postgres",
+    "context": "B2B analytics platform serving 50+ enterprise customers. Just raised seed to scale infra team.",
+    "pitch_angle": "Their stack matches yours and they're hiring senior backend — but cold-pitching the founder a 2-week SPRINT is more useful than going through the careers page noise."
+  },
+  {
+    "company": "Another Example",
+    "stage": "Series A — €8M Mar 2026",
+    "email": "ceo@another-example.io",
+    "founder": "John Smith (Founder)",
+    "role": "AI Engineer — Claude / RAG",
+    "context": "Healthcare AI startup. Building clinical decision support with LLMs. Raised Series A to expand engineering.",
+    "pitch_angle": "You shipped a similar Claude-powered product solo in 5 days at a hackathon. Concrete metric ($X/user/month) gets attention."
+  }
+]

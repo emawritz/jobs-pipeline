@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+web/node_modules/
+web/dist/
+web/.svelte-kit/
+
+# Environment & secrets — never commit
+.env
+*.log
+
+# OS
+.DS_Store
+
+# User data — everything in data/ except *.example.* templates
+data/*
+!data/.gitkeep
+!data/*.example.json
+!data/*.example.md
+
+# Playwright session (cookies)
+.playwright-data/
+
+# Personal profile (gitignored — copy from MASTER.example.md)
+MASTER.md
+CLAUDE.md
+
+# CV / personal docs (user puts their own)
+cv/
+portfolio/
+research/
+profiles/
+outreach/
+
+# Misc dev artifacts
+.claude/

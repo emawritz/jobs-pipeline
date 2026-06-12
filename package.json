@@ -1,0 +1,45 @@
+{
+  "name": "jobs-pipeline",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Personal tooling — desechable. R2 NO sobre-ingeniería.",
+  "scripts": {
+    "digest": "tsx bin/digest.ts",
+    "propose": "tsx bin/propose.ts",
+    "outreach": "tsx bin/outreach.ts",
+    "tracker": "tsx bin/tracker.ts",
+    "followup": "tsx bin/followup.ts",
+    "reply": "tsx bin/reply.ts",
+    "auto-apply": "tsx bin/auto-apply.ts",
+    "auto-apply-all": "tsx bin/auto-apply-all.ts",
+    "register-freelance": "tsx bin/register-freelance.ts",
+    "hn-login": "tsx bin/hn-login.ts",
+    "hn-post": "tsx bin/hn-post.ts",
+    "hn-check": "tsx bin/hn-post.ts --check",
+    "workana-login": "tsx bin/workana-login.ts",
+    "workana-scan": "tsx scrapers/workana.ts",
+    "workana-bid": "tsx bin/workana-bid.ts",
+    "workana-drafts": "tsx bin/workana-bid.ts --draft-only",
+    "email-spain-sprint": "tsx bin/email-spain-sprint.ts",
+    "email-spain-sprint-dry": "tsx bin/email-spain-sprint.ts --dry-run --max=3",
+    "gmail-auth": "tsx bin/gmail-auth.ts",
+    "gmail-poll": "tsx bin/gmail-poll.ts",
+    "getonboard-apply": "tsx bin/getonboard-apply.ts",
+    "getonboard-apply-dry": "tsx bin/getonboard-apply.ts --dry-run --max=5",
+    "getonboard-apply-review": "tsx bin/getonboard-apply.ts --review --headed --max=5",
+    "getonboard-login": "tsx bin/getonboard-login.ts",
+    "getonboard-import-cookies": "tsx bin/getonboard-import-cookies.ts",
+    "dashboard": "cd web && npm run dev"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0",
+    "googleapis": "^172.0.0",
+    "playwright": "^1.60.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}
