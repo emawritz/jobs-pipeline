@@ -60,7 +60,7 @@ npm install
 cd web && npm install && cd ..
 
 # Configure (three files — that's it)
-cp .env.example .env             # ANTHROPIC_API_KEY + your name/email
+cp .env.example .env             # CLAUDE_BIN + your name/email
 cp MASTER.example.md MASTER.md   # YOUR projects + metrics (this is the file)
 cp data/answers.example.json data/answers.json
 
@@ -130,7 +130,7 @@ See [`MASTER.example.md`](MASTER.example.md) for the full template.
 
 - **Runtime** — Node 22+ with `tsx` (no build step for backend scripts)
 - **Scraping** — Playwright (browser) + Cheerio (HTML parse)
-- **AI** — Claude Sonnet 4.6 (drafts) + Haiku 4.5 (scoring) via Anthropic SDK
+- **AI** — Claude Sonnet (drafts) + Haiku (scoring) via [Claude Code CLI](https://claude.com/claude-code) — your existing subscription covers it, $0 in API spend
 - **Email outbound** — Mail.app via AppleScript (Gmail relays, not raw SMTP — your IP stays clean)
 - **Email inbound** — Gmail OAuth + thread-aware matcher
 - **Schedules** — launchd plists (daily 8am sweep · 10-min Gmail poll · monthly HN poster)
@@ -145,7 +145,7 @@ See [`MASTER.example.md`](MASTER.example.md) for the full template.
 | Cookies for GetOnBoard / Workana / LinkedIn | `.playwright-data/` on your disk | Shared infra surface |
 | Gmail OAuth token | Your file system | Centralized blast radius |
 | Customization (prompts, scoring, filters) | Edit any `.ts` | Wait for a feature flag |
-| Cost at 1000 apps/month | ~$3 in Claude API | $50+ subscription |
+| Cost at 1000 apps/month | $0 marginal (uses your Claude Code subscription) | $50+ subscription on top |
 
 Hosting this for someone else is on the roadmap. For now: own your funnel, own your data.
 
