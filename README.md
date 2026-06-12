@@ -60,7 +60,7 @@ npm install
 cd web && npm install && cd ..
 
 # Configure (three files — that's it)
-cp .env.example .env             # CLAUDE_BIN + your name/email
+cp .env.example .env             # optional — CLAUDE_BIN if not in PATH
 cp MASTER.example.md MASTER.md   # YOUR projects + metrics (this is the file)
 cp data/answers.example.json data/answers.json
 

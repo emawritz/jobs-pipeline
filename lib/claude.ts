@@ -1,3 +1,4 @@
+import "./env.ts"; // side-effect: load .env into process.env
 import { spawn } from "node:child_process";
 import { tmpdir } from "node:os";
 

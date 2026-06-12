@@ -1,4 +1,6 @@
 import { readFileSync, existsSync } from "node:fs";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import type { Page, ElementHandle } from "playwright";
 import { callText, DRAFT_MODEL } from "./claude.ts";
 
@@ -98,7 +100,20 @@ async function waitForFormField(page: Page, timeout = 6000): Promise<boolean> {
   }
 }
 
-export function loadAnswers(path = "profiles/answers.json"): Answers {
+export function loadAnswers(path?: string): Answers {
+  // Resolve relative paths from the project root so this works regardless of
+  // process.cwd() (Vite plugin host has cwd=web/).
+  if (!path) {
+    const here = fileURLToPath(import.meta.url);
+    const projectRoot = join(dirname(here), "..");
+    // Prefer data/answers.json (current convention); fall back to legacy
+    // profiles/answers.json if someone still keeps it there.
+    const dataPath = join(projectRoot, "data", "answers.json");
+    const legacyPath = join(projectRoot, "profiles", "answers.json");
+    if (existsSync(dataPath)) path = dataPath;
+    else if (existsSync(legacyPath)) path = legacyPath;
+    else throw new Error("answers.json not found. Run: cp data/answers.example.json data/answers.json");
+  }
   return JSON.parse(readFileSync(path, "utf8"));
 }
 

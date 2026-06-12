@@ -1,3 +1,4 @@
+import "./env.ts"; // side-effect: load .env into process.env
 import type { Page } from "playwright";
 
 // 2captcha solver. Opt-in via TWO_CAPTCHA_API_KEY env var.
