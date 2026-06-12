@@ -33,6 +33,7 @@
     "prompt-iterate": "tsx bin/prompt-iterate.ts",
     "prompt-iterate-dry": "tsx bin/prompt-iterate.ts --dry-run",
     "prompt-activate": "tsx bin/prompt-activate.ts",
+    "seed-demo": "tsx bin/seed-synthetic-sample.ts --reset",
     "dashboard": "cd web && npm run dev"
   },
   "dependencies": {

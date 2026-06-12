@@ -98,6 +98,13 @@ When you have enough sample data (≥10 apps with outcomes), run an iteration:
 npm run prompt-iterate -- --key=cover-letter-en --sample=30
 ```
 
+**To try the loop without waiting for real outcomes**, seed a synthetic sample first:
+
+```bash
+npm run seed-demo                        # 12 synthetic samples in data/cover-letters/
+npm run prompt-iterate                   # runs against them, gives you a real Claude critique
+```
+
 The script:
 
 1. Pulls your last N apps with their outcomes (`replied` / `bounced` / `ghosted`)

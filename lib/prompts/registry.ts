@@ -49,22 +49,22 @@ function saveActiveMap(m: ActiveMap): void {
 }
 
 // Discover all versions on disk for a prompt key.
-// Looks for files matching `lib/prompts/<key>.v*.ts`. Each must default-export
-// or named-export a PromptVersion-shaped object.
+// Two sources, in order:
+//   1) Built-in TS files (v1) registered in BUILTINS at module load.
+//   2) JSON files at `lib/prompts/<key>.v<version>.json` (written by
+//      prompt-iterate). These are read with plain fs.readFile so they work
+//      under runtimes that intercept dynamic import (e.g. Vite plugin host).
 async function discoverVersions(key: PromptKey): Promise<Map<string, PromptVersion>> {
   const out = new Map<string, PromptVersion>();
-  // Always seed with built-in v1.
   if (BUILTINS[key]) out.set(BUILTINS[key].version, BUILTINS[key]);
   if (!existsSync(PROMPTS_DIR)) return out;
   for (const name of readdirSync(PROMPTS_DIR)) {
-    if (!name.startsWith(`${key}.v`) || !name.endsWith(".ts")) continue;
+    if (!name.startsWith(`${key}.v`) || !name.endsWith(".json")) continue;
     try {
-      const mod = await import(join(PROMPTS_DIR, name));
-      for (const exp of Object.values(mod)) {
-        const candidate = exp as Partial<PromptVersion>;
-        if (candidate && candidate.key === key && typeof candidate.version === "string" && typeof candidate.systemPrompt === "string") {
-          out.set(candidate.version, candidate as PromptVersion);
-        }
+      const raw = readFileSync(join(PROMPTS_DIR, name), "utf8");
+      const candidate = JSON.parse(raw) as Partial<PromptVersion>;
+      if (candidate && candidate.key === key && typeof candidate.version === "string" && typeof candidate.systemPrompt === "string") {
+        out.set(candidate.version, candidate as PromptVersion);
       }
     } catch {
       // skip broken files
@@ -84,8 +84,11 @@ export async function getActivePrompt(key: PromptKey): Promise<PromptVersion> {
   if (pinned && versions.has(pinned)) {
     return versions.get(pinned)!;
   }
-  // Default: highest version string by lexical sort (works for "1.0.0" < "1.1.0" < "2.0.0").
-  const sorted = Array.from(versions.values()).sort((a, b) => (a.version < b.version ? 1 : -1));
+  // Default: lowest-version (v1) until user explicitly pins something newer.
+  // Guardrail: new versions written by prompt-iterate are NEVER served by
+  // default — they sit on disk waiting for the user to activate them. This
+  // preserves the "nothing changes without your click" promise.
+  const sorted = Array.from(versions.values()).sort((a, b) => (a.version < b.version ? -1 : 1));
   return sorted[0];
 }
 

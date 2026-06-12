@@ -254,29 +254,28 @@ async function main() {
   writeFileSync(reportPath, report);
   console.log(`  ✓ wrote ${reportPath}`);
 
-  // Also write the candidate prompt as a versioned .ts file (NOT activated).
+  // Also write the candidate prompt as a versioned .json file (NOT activated).
+  // JSON (not .ts) so the registry can read it under Vite plugin host where
+  // dynamic import doesn't pick up runtime-written files.
   if (parsed.verdict === "iterate") {
-    const promptFile = join(PROMPTS_DIR, `${key}.v${newVersion.replace(/\./g, "-")}.ts`);
+    const promptFile = join(PROMPTS_DIR, `${key}.v${newVersion}.json`);
     if (existsSync(promptFile)) {
       console.log(`  ✗ ${promptFile} already exists, refusing to overwrite`);
     } else {
-      const tsBody = `import type { PromptVersion } from "./types.ts";
-
-export const ${key.toUpperCase().replace(/-/g, "_")}_V${newVersion.replace(/\./g, "_")}: PromptVersion = {
-  key: "${key}",
-  version: "${newVersion}",
-  createdAt: "${new Date().toISOString()}",
-  parentVersion: "${active.version}",
-  notes: ${JSON.stringify(parsed.proposedPromptDiff)},
-  derivedFrom: {
-    iterationId: "${iterationId}",
-    sampleSize: ${paired.length},
-    replyRate: ${replied / Math.max(1, replied + ghosted)},
-  },
-  systemPrompt: ${JSON.stringify(parsed.proposedSystemPrompt)},
-};
-`;
-      writeFileSync(promptFile, tsBody);
+      const candidate = {
+        key,
+        version: newVersion,
+        createdAt: new Date().toISOString(),
+        parentVersion: active.version,
+        notes: parsed.proposedPromptDiff,
+        derivedFrom: {
+          iterationId,
+          sampleSize: paired.length,
+          replyRate: replied / Math.max(1, replied + ghosted),
+        },
+        systemPrompt: parsed.proposedSystemPrompt,
+      };
+      writeFileSync(promptFile, JSON.stringify(candidate, null, 2));
       console.log(`  ✓ wrote ${promptFile} (not activated yet)`);
     }
   }

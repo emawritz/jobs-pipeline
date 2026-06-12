@@ -1,5 +1,5 @@
 import type { Plugin } from "vite";
-import { readFileSync, writeFileSync, existsSync, readdirSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, readdirSync, mkdirSync, statSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -578,13 +578,13 @@ export function apiPlugin(): Plugin {
           if (req.method === "GET" && url === "/api/prompt-iterations") {
             const dir = join(ROOT, "data/prompt-iterations");
             if (!existsSync(dir)) return sendJSON(res, 200, { iterations: [] });
-            const files = require("node:fs").readdirSync(dir)
-              .filter((f: string) => f.endsWith(".md"))
+            const files = readdirSync(dir)
+              .filter((f) => f.endsWith(".md"))
               .sort()
               .reverse();
-            const iterations = files.slice(0, 20).map((f: string) => {
+            const iterations = files.slice(0, 20).map((f) => {
               const full = join(dir, f);
-              const stat = require("node:fs").statSync(full);
+              const stat = statSync(full);
               return {
                 id: f.replace(/\.md$/, ""),
                 filename: f,
