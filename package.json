@@ -1,9 +1,9 @@
 {
   "name": "jobs-pipeline",
-  "version": "0.0.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
-  "description": "Personal tooling — desechable. R2 NO sobre-ingeniería.",
+  "description": "Local AI agent that runs your senior-dev job hunt end-to-end. Scrape, score, draft, submit, track. Plus self-iterating prompts.",
   "scripts": {
     "digest": "tsx bin/digest.ts",
     "propose": "tsx bin/propose.ts",
@@ -30,6 +30,9 @@
     "getonboard-apply-review": "tsx bin/getonboard-apply.ts --review --headed --max=5",
     "getonboard-login": "tsx bin/getonboard-login.ts",
     "getonboard-import-cookies": "tsx bin/getonboard-import-cookies.ts",
+    "prompt-iterate": "tsx bin/prompt-iterate.ts",
+    "prompt-iterate-dry": "tsx bin/prompt-iterate.ts --dry-run",
+    "prompt-activate": "tsx bin/prompt-activate.ts",
     "dashboard": "cd web && npm run dev"
   },
   "dependencies": {

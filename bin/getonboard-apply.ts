@@ -17,6 +17,8 @@ import { join } from "node:path";
 import { scrape } from "../scrapers/getonboard.ts";
 import { callText, DRAFT_MODEL } from "../lib/claude.ts";
 import { loadProfile } from "../lib/email-apply.ts";
+import { getActivePrompt } from "../lib/prompts/registry.ts";
+import { saveCoverLetter } from "../lib/cover-letter-store.ts";
 import { readJSON, writeJSON, today } from "../lib/storage.ts";
 import type { RawJob } from "../lib/score.ts";
 
@@ -108,8 +110,26 @@ REGLAS NO NEGOCIABLES:
 
 OUTPUT: SOLO el texto del cuerpo. Sin JSON, sin comillas, sin preámbulo.`;
 
-async function draftCover(job: { company: string; title: string; text: string }, language: "en" | "es", candidateCtx: string): Promise<string> {
-  const sys = language === "en" ? SYSTEM_EN : SYSTEM_ES;
+async function draftCover(
+  job: { company: string; title: string; text: string; url?: string },
+  language: "en" | "es",
+  candidateCtx: string,
+  appId?: string,
+): Promise<string> {
+  // Pull the ACTIVE prompt version from the registry. Falls back to built-in
+  // constants only if the registry is broken (paranoia guard).
+  const promptKey = language === "en" ? "cover-letter-en" : "cover-letter-es";
+  let sys: string;
+  let promptVersion: string;
+  try {
+    const active = await getActivePrompt(promptKey);
+    sys = active.systemPrompt;
+    promptVersion = active.version;
+  } catch {
+    sys = language === "en" ? SYSTEM_EN : SYSTEM_ES;
+    promptVersion = "1.0.0-builtin";
+  }
+
   const user = `CANDIDATE CONTEXT (MASTER profile):
 ${candidateCtx.slice(0, 7000)}
 
@@ -121,8 +141,29 @@ ${job.text.slice(0, 4000)}
 
 Write the cover letter body now. Plain text only.`;
   const out = await callText(user, { system: sys, model: DRAFT_MODEL, timeoutMs: 180000 });
-  // Clean up any accidental wrapping quotes / markdown fences.
-  return out.replace(/^```[a-z]*\s*/i, "").replace(/```$/, "").replace(/^["']|["']$/g, "").trim();
+  const body = out.replace(/^```[a-z]*\s*/i, "").replace(/```$/, "").replace(/^["']|["']$/g, "").trim();
+
+  // Persist for the self-iteration loop.
+  if (appId) {
+    try {
+      saveCoverLetter({
+        appId,
+        promptKey,
+        promptVersion,
+        language,
+        company: job.company,
+        title: job.title,
+        jobUrl: job.url ?? "",
+        jobTextSnippet: job.text.slice(0, 500),
+        subject: null,
+        body,
+        generatedAt: new Date().toISOString(),
+      });
+    } catch (e) {
+      console.error(`  (warn) saveCoverLetter failed: ${(e as Error).message}`);
+    }
+  }
+  return body;
 }
 
 // Convert plain text cover letter into the Trix-compatible HTML (paragraph divs).
@@ -686,9 +727,10 @@ async function processJob(
 
   console.log(`  drafting cover letter (${DRAFT_MODEL})...`);
   const cover = await draftCover(
-    { company: job.company ?? "?", title: job.title ?? "?", text: job.text },
+    { company: job.company ?? "?", title: job.title ?? "?", text: job.text, url: job.url },
     language,
     candidateCtx,
+    appId,
   );
   console.log(`  cover: ${cover.length} chars`);
   const coverPreview = cover.slice(0, 200).replace(/\s+/g, " ");
@@ -863,9 +905,11 @@ async function main() {
       const language = /require.*English|requiere.*Ingl[eé]s|must be in English/i.test(job.text) ? "en" : "es";
       try {
         const cover = await draftCover(
-          { company: job.company ?? "?", title: job.title ?? "?", text: job.text },
+          { company: job.company ?? "?", title: job.title ?? "?", text: job.text, url: job.url },
           language,
           candidateCtx,
+          // dry-run mode: synthesize a temp appId for cover-letter persistence
+          `dryrun-${genId()}`,
         );
         console.log(`  ✓ drafted (${language}, ${cover.length} chars)`);
         drafts.push({ job, language, cover });

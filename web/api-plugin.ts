@@ -149,6 +149,26 @@ const PLAYBOOKS: Record<string, Playbook> = {
     command: "npx",
     args: ["tsx", "bin/getonboard-apply.ts", "--max=5"],
   },
+
+  // ── PROMPTS (v0.2 self-iteration) ──
+  "prompt-iterate-cover-en": {
+    label: "Iterar prompt: cover-letter (EN)",
+    description: "Analiza últimas 30 cover letters EN con sus outcomes (replied/bounced/ghosted), pide a Claude que critique el prompt activo y proponga v2. Escribe la propuesta a data/prompt-iterations/, NO la activa.",
+    command: "npx",
+    args: ["tsx", "bin/prompt-iterate.ts", "--key=cover-letter-en", "--sample=30"],
+  },
+  "prompt-iterate-cover-es": {
+    label: "Iterar prompt: cover-letter (ES)",
+    description: "Igual que el de EN pero para cover letters en español.",
+    command: "npx",
+    args: ["tsx", "bin/prompt-iterate.ts", "--key=cover-letter-es", "--sample=30"],
+  },
+  "prompt-iterate-email-en": {
+    label: "Iterar prompt: email apply (EN)",
+    description: "Analiza emails EN enviados a recruiters/founders, propone una nueva versión del SYSTEM.",
+    command: "npx",
+    args: ["tsx", "bin/prompt-iterate.ts", "--key=email-application-en", "--sample=30"],
+  },
 };
 
 function readJSON<T>(path: string, fallback: T): T {
@@ -533,6 +553,72 @@ export function apiPlugin(): Plugin {
               repliesDetected: loadReplies().length,
             });
           }
+
+          // ── PROMPTS REGISTRY (v0.2 self-iteration) ──
+          if (req.method === "GET" && url === "/api/prompts") {
+            const { getAllActive, listVersions } = await import("../lib/prompts/registry.ts");
+            const active = await getAllActive();
+            const detailed = await Promise.all(active.map(async (a) => ({
+              key: a.key,
+              activeVersion: a.active.version,
+              activeNotes: a.active.notes,
+              availableVersions: (await listVersions(a.key)).map((v) => ({
+                version: v.version,
+                createdAt: v.createdAt,
+                parentVersion: v.parentVersion,
+                notes: v.notes,
+                sampleSize: v.derivedFrom?.sampleSize ?? null,
+                replyRate: v.derivedFrom?.replyRate ?? null,
+              })),
+            })));
+            return sendJSON(res, 200, { prompts: detailed });
+          }
+
+          // List recent iteration suggestions (data/prompt-iterations/*.md).
+          if (req.method === "GET" && url === "/api/prompt-iterations") {
+            const dir = join(ROOT, "data/prompt-iterations");
+            if (!existsSync(dir)) return sendJSON(res, 200, { iterations: [] });
+            const files = require("node:fs").readdirSync(dir)
+              .filter((f: string) => f.endsWith(".md"))
+              .sort()
+              .reverse();
+            const iterations = files.slice(0, 20).map((f: string) => {
+              const full = join(dir, f);
+              const stat = require("node:fs").statSync(full);
+              return {
+                id: f.replace(/\.md$/, ""),
+                filename: f,
+                createdAt: stat.mtime.toISOString(),
+                sizeBytes: stat.size,
+              };
+            });
+            return sendJSON(res, 200, { iterations });
+          }
+
+          // Get a single iteration report (markdown body).
+          if (req.method === "GET" && url.startsWith("/api/prompt-iterations/")) {
+            const id = url.slice("/api/prompt-iterations/".length);
+            const safe = id.replace(/[^a-z0-9._-]/gi, "");
+            const full = join(ROOT, "data/prompt-iterations", `${safe}.md`);
+            if (!existsSync(full)) return sendJSON(res, 404, { error: "not found" });
+            return sendJSON(res, 200, {
+              id: safe,
+              body: readFileSync(full, "utf8"),
+            });
+          }
+
+          // Activate a prompt version. POST { key, version }.
+          if (req.method === "POST" && url === "/api/prompt-activate") {
+            const body = await readBody(req);
+            const { setActiveVersion, listVersions } = await import("../lib/prompts/registry.ts");
+            const versions = await listVersions(body.key);
+            if (!versions.find((v) => v.version === body.version)) {
+              return sendJSON(res, 404, { error: `version ${body.version} not found for ${body.key}` });
+            }
+            setActiveVersion(body.key, body.version);
+            return sendJSON(res, 200, { ok: true, key: body.key, activeVersion: body.version });
+          }
+
           return sendJSON(res, 404, { error: "no route" });
         } catch (e) {
           return sendJSON(res, 500, { error: (e as Error).message });

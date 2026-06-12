@@ -116,7 +116,7 @@ export function startJob(opts: {
 
   const proc = spawn(opts.command, opts.args, {
     cwd: opts.cwd ?? process.cwd(),
-    env: { ...process.env, FORCE_COLOR: "0", CLAUDE_CODE_NO_HOOKS: "1", PATH: `${HOME}/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:${process.env.PATH ?? ""}` },
+    env: { ...process.env, FORCE_COLOR: "0", CLAUDE_CODE_NO_HOOKS: "1", PATH: `${process.env.HOME ?? ""}/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:${process.env.PATH ?? ""}` },
     detached: false,
   });
   job.pid = proc.pid;

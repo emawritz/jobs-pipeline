@@ -106,6 +106,8 @@ async function main() {
         language: "es",
         pitch: "sprint",
         dryRun,
+        appId,
+        jobUrl: url,
       });
 
       if (r.ok) {

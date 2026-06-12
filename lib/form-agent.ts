@@ -191,6 +191,8 @@ export type Action =
   | { kind: "upload"; selector: string; path: string; label?: string }
   | { kind: "skip"; selector: string; reason: string; label?: string };
 
+const PLANNER_SYSTEM = `You are an intelligent job-application agent acting on behalf of the candidate described in the MASTER profile.
+
 - Use projects + metrics from the MASTER.md profile. Do NOT invent any.
 
 Your job: receive a structured snapshot of a form + the company/role/posting text + the candidate's answers bank, then return a list of actions (one per field) that fills the form intelligently and honestly.

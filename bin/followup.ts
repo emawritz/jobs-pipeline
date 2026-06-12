@@ -34,6 +34,8 @@ const TONE: Record<string, string> = {
   "day-17+": "Final touch. Make it easy for them to say 'not now' without burning the bridge. Offer to circle back in 3 months or to send something concrete if useful. Max 50 words.",
 };
 
+const SYSTEM_BASE = `You draft followup messages to a cold application or outreach that went silent.
+
 - Use projects + metrics from the MASTER.md profile. Do NOT invent any.
 
 NON-NEGOTIABLE RULES:

@@ -6,6 +6,8 @@ import { fileURLToPath } from "node:url";
 import { callJSON, DRAFT_MODEL } from "./claude.ts";
 import { loadAnswers } from "./auto-apply.ts";
 import { isBounced } from "./bounce-tracker.ts";
+import { getActivePrompt } from "./prompts/registry.ts";
+import { saveCoverLetter } from "./cover-letter-store.ts";
 
 // Profile source resolution: MASTER.md in repo root (gitignored, candidate's
 // personal dossier) → fall back to CLAUDE.md if present.
@@ -90,12 +92,29 @@ export async function draftEmail(context: {
   toEmail: string;
   language?: "en" | "es";
   pitch?: "hire" | "sprint";
-}): Promise<EmailDraft> {
-  let sysPrompt = SYSTEM_EN;
-  if (context.pitch === "sprint" && context.language === "es") sysPrompt = SYSTEM_SPRINT_ES;
-  else if (context.language === "es") sysPrompt = SYSTEM_ES;
+}): Promise<EmailDraft & { promptKey: string; promptVersion: string }> {
+  // Resolve which prompt to use, then load the ACTIVE version from the
+  // registry. Falls back to built-in v1 strings only if registry blew up.
+  const promptKey = context.pitch === "sprint" && context.language === "es"
+    ? "email-sprint-es"
+    : context.language === "es"
+      ? "email-application-es"
+      : "email-application-en";
+  let sysPrompt: string;
+  let promptVersion: string;
+  try {
+    const active = await getActivePrompt(promptKey);
+    sysPrompt = active.systemPrompt;
+    promptVersion = active.version;
+  } catch {
+    sysPrompt = promptKey === "email-sprint-es" ? SYSTEM_SPRINT_ES
+      : promptKey === "email-application-es" ? SYSTEM_ES
+      : SYSTEM_EN;
+    promptVersion = "1.0.0-builtin";
+  }
+
   const answers = loadAnswers();
-  const user = `CANDIDATE CONTEXT (from MASTER.md profile — 11 shipped projects, pricing tiers, 6 producto/proceso rules):
+  const user = `CANDIDATE CONTEXT (from MASTER.md profile):
 ${context.candidateCtx.slice(0, 8000)}
 
 CANDIDATE ANSWERS BANK (use these literal values):
@@ -111,14 +130,16 @@ ${context.jobText.slice(0, 4500)}
 Write the email JSON now. Subject + plain-text body.`;
 
   type Out = { subject: string; body: string };
+  let out: Out;
   try {
-    return await callJSON<Out>(user, { system: sysPrompt, model: DRAFT_MODEL, timeoutMs: 180000 });
+    out = await callJSON<Out>(user, { system: sysPrompt, model: DRAFT_MODEL, timeoutMs: 180000 });
   } catch (e) {
     const msg = (e as Error).message;
     if (!/timeout|EPIPE|aborted/i.test(msg)) throw e;
     console.error(`  draftEmail timed out, retrying once...`);
-    return await callJSON<Out>(user, { system: sysPrompt, model: DRAFT_MODEL, timeoutMs: 240000 });
+    out = await callJSON<Out>(user, { system: sysPrompt, model: DRAFT_MODEL, timeoutMs: 240000 });
   }
+  return { ...out, promptKey, promptVersion };
 }
 
 // Send via Mail.app using AppleScript. Requires Mail.app to be configured with
@@ -175,11 +196,12 @@ export async function emailApply(opts: {
   dryRun?: boolean;
   language?: "en" | "es";
   pitch?: "hire" | "sprint";
+  appId?: string;            // for cover-letter persistence
+  jobUrl?: string;
 }): Promise<{ ok: boolean; subject: string; body: string; reason: string }> {
   if (!EMAIL_VALID.test(opts.to)) {
     return { ok: false, subject: "", body: "", reason: `invalid email address: ${opts.to}` };
   }
-  // Cheap guard: bail before Claude draft if address is a known bounce.
   if (isBounced(opts.to)) {
     return { ok: false, subject: "", body: "", reason: `bounced-known-bad: ${opts.to}` };
   }
@@ -192,6 +214,26 @@ export async function emailApply(opts: {
     language: opts.language,
     pitch: opts.pitch,
   });
+  // Persist the drafted email for the self-iteration loop, even on dry runs.
+  if (opts.appId) {
+    try {
+      saveCoverLetter({
+        appId: opts.appId,
+        promptKey: draft.promptKey as "email-application-en" | "email-application-es" | "email-sprint-es",
+        promptVersion: draft.promptVersion,
+        language: opts.language ?? "en",
+        company: opts.company,
+        title: opts.role,
+        jobUrl: opts.jobUrl ?? `mailto:${opts.to.toLowerCase()}`,
+        jobTextSnippet: opts.jobText.slice(0, 500),
+        subject: draft.subject,
+        body: draft.body,
+        generatedAt: new Date().toISOString(),
+      });
+    } catch (e) {
+      console.error(`  (warn) saveCoverLetter failed: ${(e as Error).message}`);
+    }
+  }
   if (opts.dryRun) {
     return { ok: true, subject: draft.subject, body: draft.body, reason: "[dry-run] would send" };
   }

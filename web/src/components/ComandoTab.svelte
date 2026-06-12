@@ -42,6 +42,11 @@
       ids: ["hn-check"],
     },
     {
+      key: "prompts", title: "🧪 Prompts (self-iteration)",
+      subtitle: "Claude analiza tus outcomes y propone nuevas versiones del system prompt. Nada se activa sin tu click — revisá en la tab Prompts.",
+      ids: ["prompt-iterate-cover-en", "prompt-iterate-cover-es", "prompt-iterate-email-en"],
+    },
+    {
       key: "maintenance", title: "⚙️  Mantenimiento",
       subtitle: "Tareas operativas (followups, registrarse en plataformas, etc.)",
       ids: ["daily-run", "followup", "register-freelance"],

@@ -88,6 +88,39 @@ The **Sistema** tab surfaces the conversion funnel (scraped → top-scored → a
 
 ![sistema](docs/panel-sistema.png)
 
+## Self-iterating prompts (v0.2)
+
+The agent's system prompts are **versioned** in `lib/prompts/<key>.v<N>.ts`. Each generated cover letter persists to `data/cover-letters/<appId>.json` alongside the version that produced it.
+
+When you have enough sample data (≥10 apps with outcomes), run an iteration:
+
+```bash
+npm run prompt-iterate -- --key=cover-letter-en --sample=30
+```
+
+The script:
+
+1. Pulls your last N apps with their outcomes (`replied` / `bounced` / `ghosted`)
+2. Pairs each with the cover letter that was drafted for it
+3. Sends the bundle to Claude (via Code CLI — $0 marginal cost) with a critique prompt
+4. Writes a markdown report to `data/prompt-iterations/<id>.md` with: findings, proposed diff, full new prompt
+5. If Claude's verdict is `iterate`, writes a candidate `lib/prompts/<key>.v<N+1>.ts` — **not activated**
+
+You review the report in the **Prompts** tab and click to activate. One click rolls back too.
+
+![prompts](docs/panel-prompts.png)
+
+### Hard guardrails (won't change without you)
+
+- Versions are **append-only**. The script never overwrites an existing `.vN.ts`.
+- New versions never auto-activate. The active version is pinned in `data/prompt-active.json`.
+- Critique cannot weaken truthfulness rules, banned-phrase lists, or output format constraints.
+- If sample is `< 10` outcomes, the script bails with `insufficient-data` and returns the prompt unchanged.
+
+### Why this matters
+
+Most "AI for X" tools quietly degrade because nobody measures whether the prompt is still good. Here every cover letter is recorded, every outcome is paired, and the iteration loop runs on real data — your reply rate, not "Claude thinks this sounds better".
+
 ## The MASTER.md file is the whole game
 
 The agent does not invent claims. It pulls projects + metrics straight from your `MASTER.md` profile and lets Claude map them to each posting.
@@ -155,6 +188,7 @@ Hosting this for someone else is on the roadmap. For now: own your funnel, own y
 - ✅ **Email outreach** with bounce tracker + auto status updates
 - ✅ **Gmail reply detection** + matching by thread + by recipient + bounce classification
 - ✅ **Local panel** with live tail and KPIs
+- ✅ **Self-iterating prompts (v0.2)** — every cover letter is persisted with its prompt version; one command runs a critique loop and proposes the next version
 - 🚧 **Workana** — works behind login; sessions need manual refresh
 - 🚧 **LinkedIn** — manual flow today, semi-auto next
 - 📋 **Multi-tenant SaaS** — not yet (see "Why local-only" above)

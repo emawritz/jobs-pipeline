@@ -5,9 +5,10 @@
   import ComandoTab from "./components/ComandoTab.svelte";
   import SistemaTab from "./components/SistemaTab.svelte";
   import RespuestasTab from "./components/RespuestasTab.svelte";
+  import PromptsTab from "./components/PromptsTab.svelte";
   import Toast from "./components/Toast.svelte";
 
-  type Tab = "comando" | "digest" | "applications" | "outreach" | "respuestas" | "sistema";
+  type Tab = "comando" | "digest" | "applications" | "outreach" | "respuestas" | "prompts" | "sistema";
   let active = $state<Tab>("comando");
   let toast = $state<string | null>(null);
   let toastTimer: ReturnType<typeof setTimeout> | null = null;
@@ -42,6 +43,9 @@
       <button class:active={active === "respuestas"} onclick={() => (active = "respuestas")}>
         Respuestas
       </button>
+      <button class:active={active === "prompts"} onclick={() => (active = "prompts")}>
+        Prompts
+      </button>
       <button class:active={active === "sistema"} onclick={() => (active = "sistema")}>
         Sistema
       </button>
@@ -61,6 +65,8 @@
       <OutreachTab {notify} bind:count={outreachCount} />
     {:else if active === "respuestas"}
       <RespuestasTab {notify} />
+    {:else if active === "prompts"}
+      <PromptsTab />
     {:else}
       <SistemaTab {notify} />
     {/if}
