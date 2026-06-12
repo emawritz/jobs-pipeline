@@ -1,5 +1,7 @@
 <div align="center">
 
+![jobs-pipeline](docs/hero.png)
+
 # jobs-pipeline
 
 **Local AI agent that runs your senior-dev job hunt end-to-end.**
@@ -10,9 +12,6 @@ Scrape 16 sources · score with Claude · draft personalized cover letters · su
 [![Node 22+](https://img.shields.io/badge/node-%3E%3D22-339933.svg)](https://nodejs.org)
 [![Built with Claude](https://img.shields.io/badge/AI-Claude%20Sonnet%20%2B%20Haiku-d97757.svg)](https://www.anthropic.com)
 [![macOS](https://img.shields.io/badge/macOS-13%2B-000000.svg)](https://www.apple.com/macos)
-
-<!-- TODO: replace with real demo GIF -->
-<sub>⚡ 60-second demo coming soon</sub>
 
 </div>
 
@@ -37,19 +36,7 @@ This agent does the boring 80% so you spend your hours on the 20% that actually 
 
 ## What it does
 
-```
-┌──────────────┐    ┌──────────────┐    ┌──────────────┐    ┌──────────────┐
-│  16 scrapers │───▶│  Claude      │───▶│  Cover       │───▶│  ATS submit  │
-│  GoB, HN,    │    │  score       │    │  letter      │    │  / email     │
-│  Wellfound…  │    │  (Haiku)     │    │  (Sonnet)    │    │  (Playwright)│
-└──────────────┘    └──────────────┘    └──────────────┘    └──────────────┘
-                                                                    │
-┌──────────────┐    ┌──────────────┐    ┌──────────────┐            ▼
-│  Local panel │◀───│  Gmail poll  │◀───│  Reply       │    ┌──────────────┐
-│ localhost    │    │  every 10m   │    │  matcher +   │◀───│  apps.json   │
-│ :7777        │    │  (launchd)   │    │  bounce track│    │  (status)    │
-└──────────────┘    └──────────────┘    └──────────────┘    └──────────────┘
-```
+![architecture](docs/architecture.png)
 
 **End-to-end stages:**
 
@@ -90,6 +77,16 @@ First run: dry-mode against a single job, no submits, no emails:
 npx tsx bin/getonboard-apply.ts --dry-run --max=1
 # → drafts a cover letter and prints it. Nothing leaves your machine.
 ```
+
+## The panel
+
+`localhost:7777` — KPIs across the funnel (apps sent, replies, bounces, Workana, LinkedIn, HN, Spain pipeline), one-click playbooks, live tail of running jobs, cron status, and Gmail integration health.
+
+![panel](docs/panel-comando.png)
+
+The **Sistema** tab surfaces the conversion funnel (scraped → top-scored → applied → replied → in interview → offer) and lets you toggle cron schedules from the UI.
+
+![sistema](docs/panel-sistema.png)
 
 ## The MASTER.md file is the whole game
 
