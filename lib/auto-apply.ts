@@ -114,7 +114,11 @@ export function loadAnswers(path?: string): Answers {
     else if (existsSync(legacyPath)) path = legacyPath;
     else throw new Error("answers.json not found. Run: cp data/answers.example.json data/answers.json");
   }
-  return JSON.parse(readFileSync(path, "utf8"));
+  try {
+    return JSON.parse(readFileSync(path, "utf8"));
+  } catch {
+    throw new Error(`answers.json is malformed JSON at ${path}. Fix it or run: cp data/answers.example.json data/answers.json`);
+  }
 }
 
 // Humanise typing speed so we don't look like a 200ms-burst bot.
